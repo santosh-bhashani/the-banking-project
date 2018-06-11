@@ -10,7 +10,7 @@ import smtplib
 ################################SMTP#################################
 server=smtplib.SMTP('smtp.gmail.com', 587) #smtp server you are using
 server.starttls()
-server.login('bankeyindiana@gmail.com', '#############') #email through which you want to send the mail regarding withdrawl or depositions
+server.login('bankeyindiana@gmail.com', '#######') #email through which you want to send the mail regarding withdrawl or depositions
 sender='bankeyindiana@gmail.com'
 ####################################################################################
 con=connect(user="root",password="root",database="main")
@@ -64,7 +64,7 @@ def login():
                         msg = "Hello, %d amount has been withdrawn from your account, your remaining balance is %f"%(int(e17.get()),money)
                         receiver=email.get()
                         server.sendmail(sender, receiver, msg)
-                        server.close()
+                        
                         print("sent...")
                         f2call()
                     else:
@@ -88,7 +88,7 @@ def login():
                         msg = "Hello, %d amount has been deposited from your account, now your balance is %f"%(int(e17.get()),money)
                         receiver=email.get()
                         server.sendmail(sender, receiver, msg)
-                        server.close()
+                        
                         print("sent...")
                         f2call()
                     else:
@@ -146,11 +146,20 @@ def sup():
 
     ##############################sup layer 2 ################################
     def store():
-        query="insert into record values (%d,%s,'%s',%d)"%(count[0]+1,e2.get(),e3.get(),int(e4.get()))
-        cur.execute(query)
-        con.commit()
-        messagebox.showinfo("succesful","your account has been succesfully created")
-        f2call()
+        try:
+                        msg = "Hello,your account has been successfully created, and your account number is %d"%(count[0]+1)
+                        receiver=e3.get()
+                        server.sendmail(sender, receiver, msg)
+                        query="insert into record values (%d,%s,'%s',%d)"%(count[0]+1,e2.get(),e3.get(),int(e4.get()))
+                        cur.execute(query)
+                        con.commit()
+                        messagebox.showinfo("succesful","your account has been succesfully created")
+                        f2call()
+        except Exception:
+                        messagebox.showinfo("invalid email","please enter valid email id")
+                        
+        
+        
         
     f3=Frame(root,height=90,width=2000000,bg="white")
     f3.place(x=0,y=199)
