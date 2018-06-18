@@ -1,16 +1,20 @@
 ###################documetation#####################
 ###############prerequisites#####################
-'''1)create a mysql database named main
- 2)a table named record i.e >>create table record(ano int,password varchar(20),email varchar(60),balance numeric(50,10))'''
+###### python 3.5.4
+''' NOTE : DONT FORGET TO DOWNLOAD MYSQL CONNECTOR FOR PYTHON FIRST
+1)create a mysql database named "main"
+ 2)a table named record i.e >>create table record(ano int,password varchar(70),email varchar(60) unique,balance numeric(50,10))
+ '''
 
 from tkinter import *
 from tkinter import messagebox
 from mysql.connector import *
 import smtplib
+import hashlib
 ################################SMTP#################################
 server=smtplib.SMTP('smtp.gmail.com', 587) #smtp server you are using
 server.starttls()
-server.login('bankeyindiana@gmail.com', '#######') #email through which you want to send the mail regarding withdrawl or depositions
+server.login('bankeyindiana@gmail.com', '******') #email through which you want to send the mail regarding withdrawl or depositions
 sender='bankeyindiana@gmail.com'
 ####################################################################################
 con=connect(user="root",password="root",database="main")
@@ -116,7 +120,9 @@ def login():
         query="select * from record where ano=%d"%(int(e1.get()))
         cur.execute(query)
         record=cur.fetchone()
-        if record!=None and int(e1.get())==record[0] and e2.get()==record[1] :
+        hashed_password=hashlib.sha256()
+        hashed_password.update(e2.get().encode('utf-8'))
+        if record!=None and int(e1.get())==record[0] and hashed_password.hexdigest()==record[1] :
             anum.set(int(e1.get()))
             bal.set(int(record[3]))
             email.set(record[2])
@@ -132,7 +138,7 @@ def login():
     l2.grid(row=4,column=0,padx=100,pady=30,rowspan=3)
     e1=Entry(f3,font=("calibre",50))
     e1.grid(row=0,column=1,padx=100,pady=30,rowspan=3,columnspan=6)
-    e2=Entry(f3,font=("calibre",50))
+    e2=Entry(f3,font=("calibre",50),show="*")
     e2.grid(row=4,column=1,padx=100,pady=30)
     b1=Button(f3,text="login",bg="dark blue",fg="snow",font=("calibre",30),command=checker)
     b1.grid(row=7,column=1,padx=30,pady=30)
@@ -149,17 +155,28 @@ def sup():
         try:
                         msg = "Hello,your account has been successfully created, and your account number is %d"%(count[0]+1)
                         receiver=e3.get()
+                        if e4.get()=="":
+                            e4.insert(0,"0")
+                        
                         server.sendmail(sender, receiver, msg)
-                        query="insert into record values (%d,%s,'%s',%d)"%(count[0]+1,e2.get(),e3.get(),int(e4.get()))
+                        hashed_password=hashlib.sha256()
+                        hashed_password.update(e2.get().encode('utf-8'))
+                        query="insert into record values (%d,'%s','%s',%d)"%(count[0]+1,hashed_password.hexdigest(),e3.get(),int(e4.get()))
                         cur.execute(query)
                         con.commit()
                         messagebox.showinfo("succesful","your account has been succesfully created")
                         f2call()
-        except Exception:
+        except smtplib.SMTPException:
                         messagebox.showinfo("invalid email","please enter valid email id")
+
+        except IntegrityError:
+                        messagebox.showinfo("email already associated","Email already associated with an existing account, please enter different email")
+
+        
+                
                         
         
-        
+    
         
     f3=Frame(root,height=90,width=2000000,bg="white")
     f3.place(x=0,y=199)
@@ -167,7 +184,7 @@ def sup():
     l1.grid(row=0,column=0,padx=100,pady=30,rowspan=1,columnspan=20)
     l2=Label(f3,text="set password",bg="dark blue",fg="snow",font=("calibre",20))
     l2.grid(row=2,column=0,padx=100,pady=30,rowspan=1)
-    e2=Entry(f3,font=("calibre",20))
+    e2=Entry(f3,font=("calibre",20),show="*")
     e2.grid(row=2,column=1,padx=100,pady=30)
     l3=Label(f3,text="email address",bg="dark blue",fg="snow",font=("calibre",20))
     l3.grid(row=3,column=0,padx=100,pady=30,rowspan=1)
@@ -175,8 +192,9 @@ def sup():
     e3.grid(row=3,column=1,padx=100,pady=30)
     l4=Label(f3,text="initial balance",bg="dark blue",fg="snow",font=("calibre",20))
     l4.grid(row=4,column=0,padx=100,pady=30,rowspan=1)
-    e4=Entry(f3,font=("calibre",20))
+    e4=Entry(f3,font=("calibre",20),justify="right")
     e4.grid(row=4,column=1,padx=100,pady=30)
+    e4.insert(0,"0")
     b1=Button(f3,text="sign up",bg="dark blue",fg="snow",font=("calibre",30),command=store)
     b1.grid(row=0,column=8,padx=70,pady=30,rowspan=5)
     
